@@ -5,20 +5,21 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Получить код
+      - name: Get code
         uses: actions/checkout@v3
 
-      - name: Собрать Docker образ
-        run: docker build -t lab-app .
-
-      - name: Запустить контейнер
-        run: docker run -d -p 8000:8000 lab-app
-
-      - name: Проверка сервиса
-        run: |
-          sleep 5
-          curl http://localhost:8000
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/devops-lab-service
+            git pull
+            docker compose down
+            docker compose up -d --build
